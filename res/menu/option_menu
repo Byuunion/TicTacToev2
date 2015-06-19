@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/new_game"
+          android:title="New Game"
+          android:icon="@drawable/new_game"
+          android:showAsAction="always"/>
+    <item android:id="@+id/ai_difficulty"
+          android:title="Difficulty"
+          android:icon="@drawable/difficulty_level"
+          android:showAsAction="always"/>
+    <item android:id="@+id/about_dialog"
+          android:title="About"
+          android:icon="@drawable/tictactoe"
+          android:showAsAction="ifRoom"/>
+    <item android:id="@+id/reset"
+          android:title="Reset"
+          android:icon="@drawable/reset"
+          android:showAsAction="always"/>
+</menu>
