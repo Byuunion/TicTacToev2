@@ -209,5 +209,11 @@ public class TicTacToeGame {
         return '?';
     }
 
+    @Override
+    public String toString() {
+        return mBoard[0] + "|" + mBoard[1] + "|" + mBoard[2] + "\n" +
+                mBoard[3] + "|" + mBoard[4] + "|" + mBoard[5] + "\n" +
+                mBoard[6] + "|" + mBoard[7] + "|" + mBoard[8];
+    }
 
 }

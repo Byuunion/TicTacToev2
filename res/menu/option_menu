@@ -3,17 +3,21 @@
     <item android:id="@+id/new_game"
           android:title="New Game"
           android:icon="@drawable/new_game"
-          android:showAsAction="always"/>
+          android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/ai_difficulty"
           android:title="Difficulty"
           android:icon="@drawable/difficulty_level"
-          android:showAsAction="always"/>
+          android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/about_dialog"
           android:title="About"
           android:icon="@drawable/tictactoe"
-          android:showAsAction="ifRoom"/>
+          android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/reset"
           android:title="Reset"
           android:icon="@drawable/reset"
-          android:showAsAction="always"/>
+          android:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/quit"
+          android:title="Quit"
+          android:icon="@drawable/quit_game"
+          android:showAsAction="ifRoom|withText"/>
 </menu>

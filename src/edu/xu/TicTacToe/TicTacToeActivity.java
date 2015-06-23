@@ -1,7 +1,9 @@
 package edu.xu.TicTacToe;
 
+import android.app.ActionBar;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.app.Activity;
 import android.util.Log;
@@ -23,9 +25,17 @@ import android.content.SharedPreferences;
 
 import android.media.MediaPlayer;
 
+import android.os.Environment;
+
+import java.io.File;
+import java.io.FileWriter;
+
+import java.io.IOException;
 import java.util.Random;
 
 public class TicTacToeActivity extends Activity {
+    //Declaring FileWriter
+    public FileWriter outputStream;
 
     // Buttons making up the board
     private Button mBoardButtons[];
@@ -56,6 +66,7 @@ public class TicTacToeActivity extends Activity {
     static final int DIALOG_DIFFICULTY_ID = 0;
     static final int DIALOG_RESET_ID = 1;
     static final int DIALOG_ABOUT_ID = 2;
+    static final int DIALOG_QUIT_ID = 3;
 
     private SharedPreferences mPrefs;
 
@@ -66,12 +77,43 @@ public class TicTacToeActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         Log.d("TicTacToeActivity", "Running onCreate method");
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         mPrefs = getSharedPreferences("ttt_prefs", MODE_PRIVATE);
+
         // Restore the scores
         mHumanWins = mPrefs.getInt("mHumanWins", 0);
         mComputerWins = mPrefs.getInt("mComputerWins", 0);
         mTies = mPrefs.getInt("mTies", 0);
+
+        //gets the activity's default ActionBar
+        ActionBar actionBar = getActionBar();
+        actionBar.show();
+
+        // Open file for debugging info on the SD card
+        String outFile = Environment.getExternalStorageDirectory() + File.separator + "Activity.txt";
+        Log.d("TicTacToeActivity", "outFile is: " + outFile);
+        Log.d("TicTacToeActivity", "Environment Storage Dir: " + Environment.getExternalStorageDirectory());
+
+
+        // Display the file path
+        Toast.makeText(getApplicationContext(), outFile, Toast.LENGTH_SHORT).show();
+
+        // Create the file writer to be used in methods
+        try {
+            outputStream = new FileWriter(outFile);
+            Log.d("TicTacToeActivity", "Successfully instatiated outputStream");
+        } catch (IOException ex) {}
+
+        //Write restored data to debug file
+        try{
+            outputStream.write("TicTacToeActivity : Restoring Saved Scores" + "\n");
+            outputStream.write("Human Wins: " + mHumanWins + "\n");
+            outputStream.write("Computer Wins: " + mComputerWins + "\n");
+            outputStream.write("Ties : " + mTies + "\n");
+            Log.d("TicTacToeActivity", "Successfully completed outputStream.write");
+        }
+        catch(java.io.IOException ex){}
 
         mBoardButtons = new Button[TicTacToeGame.BOARD_SIZE];
         mBoardButtons[0] = (Button) findViewById(R.id.one);
@@ -181,20 +223,36 @@ public class TicTacToeActivity extends Activity {
                 mComputerWins = 0;
                 mTies = 0;
                 displayScores();
-                // Create the quit conformation dialog
-                /*
-                builder.setMessage(R.string.quit_question)
-                        .setCancelable(false)
-                        .setNegativeButton(R.string.quit_yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                TicTacToeActivity.this.finish();
-                            }
-                        })
-                        .setPositiveButton(R.string.quit_no, null);
-                dialog = builder.create();
-                */
                 break;
-        }
+
+        case DIALOG_QUIT_ID:
+            // Create the quit conformation dialog
+
+            builder.setMessage(R.string.quit_question)
+                .setCancelable(false)
+                .setNegativeButton(R.string.quit_yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // Write game status to outfile
+                        try{
+                            outputStream.write("TicTacToeActivity" + "I am closing the debug file" + "\n");
+                            outputStream.write("TicTacToeActivity" + "I am exiting the game" + "\n");
+                        }
+                        catch(java.io.IOException ex){}
+
+                        //Close the outfile when we quit the app
+                        try{
+                            outputStream.close();
+                        } catch(java.io.IOException ex) {}
+
+                        TicTacToeActivity.this.finish();
+                    }
+                })
+                .setPositiveButton(R.string.quit_no, null);
+        dialog = builder.create();
+
+
+        break;
+    }
 
         Log.d("TicTacToeActivity", "Completed onCreateDialog Method");
         return dialog;
@@ -229,19 +287,6 @@ public class TicTacToeActivity extends Activity {
         ed.commit();
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putCharArray("board", mGame.getBoardState());
-        outState.putBoolean("mGameOver", mGameOver);
-        outState.putInt("mHumanWins", Integer.valueOf(mHumanWins));
-        outState.putInt("mComputerWins", Integer.valueOf(mComputerWins));
-        outState.putInt("mTies", Integer.valueOf(mTies));
-        outState.putCharSequence("info", mInfoTextView.getText());
-        outState.putBoolean("firstPlayer", firstPlayer);
-        outState.putChar("mTurn", mTurn);
-    }
-
     // Handles menu item selections
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d("TicTacToeActivity", "Running onOptionItemSelected with a option of: " + item);
@@ -258,6 +303,9 @@ public class TicTacToeActivity extends Activity {
             case R.id.reset:
                 showDialog(DIALOG_RESET_ID);
                 return true;
+            case R.id.quit:
+                showDialog(DIALOG_QUIT_ID);
+                return true;
         }
         return false;
     }
@@ -266,6 +314,12 @@ public class TicTacToeActivity extends Activity {
     // Set up the game board.
     private void startNewGame() {
         Log.d("TicTacToeActivity", "Running startNewGame Method");
+
+        try{
+            outputStream.write("TicTacToeActivity : Starting a new game." + "\n");
+        }
+        catch(java.io.IOException ex){}
+
         mGameOver = false;
         //Alternate the starting turns
         if (firstPlayer == true) {
@@ -306,6 +360,11 @@ public class TicTacToeActivity extends Activity {
 
     private void setMove(char mTurn, int location) {
         Log.d("TicTacToeActivity", "Running setMove method with values of player: " + mTurn + " and a move of " + location);
+        try{
+            outputStream.write("TicTacToeActivity : I am in setMove(), about to move for " + mTurn + "\n");
+        }
+        catch(java.io.IOException ex){}
+
         mGame.setMove(mTurn, location);
         mBoardButtons[location].setEnabled(false);
         mBoardButtons[location].setText(String.valueOf(mTurn));
@@ -317,12 +376,24 @@ public class TicTacToeActivity extends Activity {
             mInfoTextView.setText(R.string.turn_computer);
             new Handler().postDelayed(new Runnable() {
                 public void run() {
-                    mComputerMediaPlayer.start();
+                    try {
+                        mComputerMediaPlayer.start();
+                    }
+                    catch(IllegalStateException ex){
+                        Log.d("TicTacToeActivity", "Entered Catch Block");
+                    }
+
                 }
             }, 50);
 
             mBoardButtons[location].setTextColor(Color.rgb(200, 0, 0));
         }
+        try{
+            outputStream.write("TicTacToeActivity : \n");
+            outputStream.write("Here is the board after the move for " + mTurn + "\n");
+            outputStream.write(mGame.toString() + "\n");
+        }
+        catch(java.io.IOException ex){}
     }
 
     // Handles clicks on the game board buttons
@@ -335,6 +406,31 @@ public class TicTacToeActivity extends Activity {
 
         public void onClick(View view) {
             Log.d("TicTacToeActivity", "Listening for button clicks mTurn value: " + mTurn);
+            try{
+                int colNum = -1,rowNum = -1;
+
+                if(location == 0 || location == 3 || location == 6){
+                    colNum = 0;
+                }
+                if(location == 1 || location == 4 || location == 7){
+                    colNum = 1;
+                }
+                if(location == 1 || location == 5 || location == 8){
+                    colNum = 2;
+                }
+                if(location == 0 || location == 1 || location == 2){
+                    rowNum = 0;
+                }
+                if(location == 3 || location == 4 || location == 5){
+                    rowNum = 1;
+                }
+                if(location == 6 || location == 7 || location == 8){
+                    rowNum = 2;
+                }
+                outputStream.write("TicTacToeActivity : Cell that was touched:" +
+                        " Col = " + colNum + " Row = " + rowNum + " Position = " + location + ".\n");
+            }
+            catch(java.io.IOException ex){}
 
             if (mTurn == TicTacToeGame.HUMAN_PLAYER) {
                 mTurn = TicTacToeGame.COMPUTER_PLAYER;
@@ -343,7 +439,7 @@ public class TicTacToeActivity extends Activity {
                     checkWinner();
                 }
 
-                if (mGame.checkForWinner() == 0){
+                if (mGame.checkForWinner() == 0) {
                     mInfoTextView.setText(R.string.turn_computer);
                     new Handler().postDelayed(new Runnable() {
                         public void run() {
@@ -358,34 +454,39 @@ public class TicTacToeActivity extends Activity {
 
             Log.d("TicTacToeActivity", "Completed onClick Method");
         }
+    }
 
-        private void checkWinner() {
-            //Disable Buttons on winner
-            int winner = mGame.checkForWinner();
-            Log.d("TicTacToeActivity","Entered check Winner value: " + winner);
+    private void checkWinner() {
+        //Disable Buttons on winner
+        int winner = mGame.checkForWinner();
+        Log.d("TicTacToeActivity","Entered check Winner value: " + winner);
 
 
 
-            if (winner == 0)
-                mInfoTextView.setText(R.string.turn_human);
+        if (winner == 0)
+            mInfoTextView.setText(R.string.turn_human);
 
-            else if (winner == 1) {
-                mInfoTextView.setText(R.string.result_tie);
-                mTies += 1;
-            } else if (winner == 2) {
-                mInfoTextView.setText(R.string.result_human_wins);
-                mHumanWins += 1;
-            } else {
-                mInfoTextView.setText(R.string.result_computer_wins);
-                mComputerWins += 1;
+        else if (winner == 1) {
+            mInfoTextView.setText(R.string.result_tie);
+            mTies += 1;
+        } else if (winner == 2) {
+            mInfoTextView.setText(R.string.result_human_wins);
+            mHumanWins += 1;
+        } else {
+            mInfoTextView.setText(R.string.result_computer_wins);
+            mComputerWins += 1;
+        }
+
+        if (winner != 0) {
+            try {
+                outputStream.write("TicTacToeActivity : There was a winner after the last move for " + mTurn + "\n");
             }
+            catch(java.io.IOException ex){}
 
-            if (winner != 0) {
-                for (Button mBoardButton : mBoardButtons) {
-                    mBoardButton.setEnabled(false);
-                    mGameOver = true;
-                    displayScores();
-                }
+            for (Button mBoardButton : mBoardButtons) {
+                mBoardButton.setEnabled(false);
+                mGameOver = true;
+                displayScores();
             }
         }
     }
@@ -396,11 +497,42 @@ public class TicTacToeActivity extends Activity {
         tieNumTextView.setText(String.valueOf(mTies));
     }
 
+    // Save Instance
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putCharArray("board", mGame.getBoardState());
+        outState.putBoolean("mGameOver", mGameOver);
+        outState.putInt("mHumanWins", Integer.valueOf(mHumanWins));
+        outState.putInt("mComputerWins", Integer.valueOf(mComputerWins));
+        outState.putInt("mTies", Integer.valueOf(mTies));
+        outState.putCharSequence("info", mInfoTextView.getText());
+        outState.putBoolean("firstPlayer", firstPlayer);
+        outState.putChar("mTurn", mTurn);
+
+        int selected = -1;
+        if (mGame.getDifficultyLevel() == TicTacToeGame.DifficultyLevel.Easy)
+            selected = 0;
+        if (mGame.getDifficultyLevel() == TicTacToeGame.DifficultyLevel.Harder)
+            selected = 1;
+        if (mGame.getDifficultyLevel() == TicTacToeGame.DifficultyLevel.Expert)
+            selected = 2;
+        // Save difficulty level as a Int
+        outState.putInt("mDifficulty", selected);
+    }
+
+    // Restore Instance
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         // Restore the game's state
-
         super.onRestoreInstanceState(savedInstanceState);
+
+        try{
+            outputStream.write("TicTacToeActivity : The orientation of the device changed, restoring game state \n");
+            outputStream.write("Board State: \n");
+            outputStream.write(mGame.toString() + "\n");
+        }
+        catch(java.io.IOException ex){}
 
         mGame.setBoardState(savedInstanceState.getCharArray("board"));
         mGameOver = savedInstanceState.getBoolean("mGameOver");
@@ -410,6 +542,22 @@ public class TicTacToeActivity extends Activity {
         mTies = savedInstanceState.getInt("mTies");
         firstPlayer = savedInstanceState.getBoolean("firstPlayer");
         mTurn = savedInstanceState.getChar("mTurn");
+
+        // restore difficulty level
+        int select = savedInstanceState.getInt("mDifficulty");
+        if (select == 0) mGame.setDifficultyLevel(TicTacToeGame.DifficultyLevel.Easy);
+        if (select == 1) mGame.setDifficultyLevel(TicTacToeGame.DifficultyLevel.Harder);
+        if (select == 2) mGame.setDifficultyLevel(TicTacToeGame.DifficultyLevel.Expert);
+
+        if(mGameOver == false){
+            if(mTurn == mGame.COMPUTER_PLAYER) {
+                Log.d("TicTacToeActivity", "Entered Computer Move Restore");
+                setMove(mTurn, mGame.getComputerMove());
+                checkWinner();
+                mTurn = mGame.HUMAN_PLAYER;
+            }
+
+        }
         restoreBoard();
 
     }
@@ -445,3 +593,4 @@ public class TicTacToeActivity extends Activity {
         }
     }
 }
+
