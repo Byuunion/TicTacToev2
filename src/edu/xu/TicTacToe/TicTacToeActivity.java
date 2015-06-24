@@ -456,8 +456,10 @@ public class TicTacToeActivity extends Activity {
         } else if (winner == 2) {
             mInfoTextView.setText(R.string.result_human_wins);
             mHumanWins ++;
-            mWinSound.start(); // Play the sound effect
             mInfoTextView.setText(mPrefs.getString("victory_message", defaultMessage));
+            if(mSoundOn){
+                mWinSound.start(); // Play the sound effect
+            }
         } else {
             mInfoTextView.setText(R.string.result_computer_wins);
             mComputerWins ++;
