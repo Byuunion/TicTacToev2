@@ -4,9 +4,9 @@
           android:title="New Game"
           android:icon="@drawable/new_game"
           android:showAsAction="ifRoom|withText"/>
-    <item android:id="@+id/ai_difficulty"
-          android:title="Difficulty"
-          android:icon="@drawable/difficulty_level"
+    <item android:id="@+id/settings"
+          android:title="Settings"
+          android:icon="@drawable/menu_settings"
           android:showAsAction="ifRoom|withText"/>
     <item android:id="@+id/about_dialog"
           android:title="About"
